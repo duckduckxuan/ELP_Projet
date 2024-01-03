@@ -13,12 +13,16 @@ import (
 )
 
 func main() {
+
+	// ouvrir l'image et afficher l'information d'erreur si elle existe
 	img, err := openImage("photo1.jpg")
+
 	if err != nil {
 		fmt.Println("Error opening image:", err)
 		return
 	}
 
+	// extraire les valeurs de couleur de chaque pixel d'une image
 	size := img.Bounds().Size()
 	var pixels [][]color.Color
 
@@ -30,13 +34,16 @@ func main() {
 		pixels = append(pixels, y)
 	}
 
+	// calculer le Gaussian Kernel et faire la convolution
 	boxKernel := mat.NewDense(3, 3, []float64{
 		0.075, 0.124, 0.075,
 		0.124, 0.204, 0.124,
 		0.075, 0.124, 0.075,
 	})
+
 	spartialFilter(&pixels, boxKernel)
 
+	// sauvgarder l'image traitée
 	rect := image.Rect(0, 0, len(pixels), len(pixels[0]))
 	nImg := image.NewRGBA(rect)
 
@@ -51,6 +58,7 @@ func main() {
 			}
 		}
 	}
+
 	saveImage(nImg, "resultat1.jpg")
 }
 
