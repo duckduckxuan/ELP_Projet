@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	img, err := openImage("photo3.jpg")
+	img, err := openImage("photo1.jpg")
 	if err != nil {
 		fmt.Println("Error opening image:", err)
 		return
@@ -51,7 +51,7 @@ func main() {
 			}
 		}
 	}
-	saveImage(nImg, "resultat3.jpg")
+	saveImage(nImg, "resultat1.jpg")
 }
 
 func openImage(path string) (image.Image, error) {
@@ -85,39 +85,36 @@ func saveImage(img image.Image, filePath string) error {
 }
 
 func spartialFilter(pixels *[][]color.Color, kernel *mat.Dense) {
-	ppixel := *pixels
-
 	rows, cols := kernel.Dims()
 	offset := rows / 2
-	kernelLength := cols
 
-	newImage := make([][]color.Color, len(ppixel))
+	newImage := make([][]color.Color, len(*pixels))
 	for i := range newImage {
-		newImage[i] = make([]color.Color, len(ppixel[0]))
+		newImage[i] = make([]color.Color, len((*pixels)[0]))
 	}
 
-	for x := offset; x < len(ppixel)-offset; x++ {
-		for y := offset; y < len(ppixel[0])-offset; y++ {
+	for x := offset; x < len(*pixels)-offset; x++ {
+		for y := offset; y < len((*pixels)[0])-offset; y++ {
 			var sumR, sumG, sumB float64
-			for m := 0; m < kernelLength; m++ {
-				for n := 0; n < kernelLength; n++ {
-					xn := x + m - offset
-					yn := y + n - offset
-					r, g, b, _ := ppixel[xn][yn].RGBA()
-					kernelValue := kernel.At(m, n)
-					sumR += float64(r>>8) * kernelValue
-					sumG += float64(g>>8) * kernelValue
-					sumB += float64(b>>8) * kernelValue
+			for dx := 0; dx < rows; dx++ {
+				for dy := 0; dy < cols; dy++ {
+					pixel := (*pixels)[x+dx-offset][y+dy-offset]
+					r, g, b, _ := pixel.RGBA()
+					kernelValue := kernel.At(dx, dy)
+					sumR += (float64(r) / 65535) * kernelValue
+					sumG += (float64(g) / 65535) * kernelValue
+					sumB += (float64(b) / 65535) * kernelValue
 				}
 			}
 			newPixel := color.RGBA{
-				R: uint8(math.Min(math.Max(0, sumR), 255)),
-				G: uint8(math.Min(math.Max(0, sumG), 255)),
-				B: uint8(math.Min(math.Max(0, sumB), 255)),
+				R: uint8(math.Min(math.Max(0, sumR*255), 255)),
+				G: uint8(math.Min(math.Max(0, sumG*255), 255)),
+				B: uint8(math.Min(math.Max(0, sumB*255), 255)),
 				A: 255,
 			}
 			newImage[x][y] = newPixel
 		}
 	}
+
 	*pixels = newImage
 }
