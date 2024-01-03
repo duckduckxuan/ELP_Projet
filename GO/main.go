@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	img, err := openImage("photo_2024-01-03_23-00-20.jpg")
+	img, err := openImage("photo2.jpg")
 	if err != nil {
 		fmt.Println("Error opening image:", err)
 		return
@@ -49,7 +49,7 @@ func main() {
 		}
 	}
 
-	saveImage(img, "resultat.jpg")
+	saveImage(img, "resultat2.jpg")
 }
 
 func openImage(path string) (image.Image, error) {
