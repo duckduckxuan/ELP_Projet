@@ -122,7 +122,7 @@ func spartialFilter(pixels *[][]color.Color, kernel *mat.Dense) {
 			}
 			newImage[x][y] = newPixel
 		}
-	}fcghfconst
+	}
 
 	*pixels = newImage
 }
