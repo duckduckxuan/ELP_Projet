@@ -13,14 +13,16 @@ import (
 )
 
 func main() {
-
-	// ouvrir l'image et afficher l'information d'erreur si elle existe
+	// Ouvrir l'image
 	img, err := openImage("photo1.jpg")
-
 	if err != nil {
 		fmt.Println("Error opening image:", err)
 		return
 	}
+
+	// Convertir l'image en noir et blanc
+	grayImg := toGrayscale(img)
+	saveImage(grayImg, "resultat_gris.jpg")
 
 	// extraire les valeurs de couleur de chaque pixel d'une image
 	size := img.Bounds().Size()
@@ -125,4 +127,37 @@ func spartialFilter(pixels *[][]color.Color, kernel *mat.Dense) {
 	}
 
 	*pixels = newImage
+}
+
+func toGrayscale(img image.Image) *image.Gray {
+	// Obtenir les dimensions de l'image
+	bounds := img.Bounds()
+	width, height := bounds.Dx(), bounds.Dy()
+
+	// Créer une nouvelle image en niveaux de gris
+	grayImg := image.NewGray(bounds)
+
+	// Parcourir chaque pixel de l'image
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			// Obtenir la couleur du pixel
+			col := img.At(x, y)
+
+			// Convertir la couleur en niveaux de gris (luminance)
+			grayValue := luminance(col)
+
+			// Définir la nouvelle valeur du pixel en niveaux de gris
+			grayImg.SetGray(x, y, color.Gray{Y: uint8(grayValue)})
+		}
+	}
+
+	return grayImg
+}
+
+func luminance(c color.Color) float64 {
+	// Extraire les composantes de couleur du pixel
+	r, g, b, _ := c.RGBA()
+
+	// Calculer la luminance (moyenne pondérée)
+	return 0.299*float64(r) + 0.587*float64(g) + 0.114*float64(b)
 }
