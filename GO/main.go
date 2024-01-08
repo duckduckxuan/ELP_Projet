@@ -84,7 +84,7 @@ func extraire_pixel(img image.Image) [][]color.Color {
 }
 
 // Calculer le poids de propabilité de chaque points dans le Gaussian Kernel
-func calcul_propa(x float64, y float64, sigma float64) float64 {
+func calculPropability(x float64, y float64, sigma float64) float64 {
 	return math.Exp(-(x*x + y*y) / (2 * sigma * sigma))
 }
 
@@ -102,8 +102,8 @@ func boxKernel(taille int, sigma float64) (*mat.Dense, error) {
 	// Créer le Gaussian Kernel
 	for i := borne1; i <= borne2; i++ {
 		for j := borne1; j <= borne2; j++ {
-			matrice = append(matrice, calcul_propa(i, j, sigma))
-			poids += calcul_propa(i, j, sigma)
+			matrice = append(matrice, calculPropability(i, j, sigma))
+			poids += calculPropability(i, j, sigma)
 		}
 	}
 
