@@ -20,11 +20,56 @@ func main() {
 		return
 	}
 
+	// Extraire les valeurs de couleur de chaque pixel d'une image
+	pixels := extraire_pixel(img)
+
 	// Convertir l'image en noir et blanc
 	grayImg := toGrayscale(img)
 	saveImage(grayImg, "resultat_gris.jpg")
 
-	// Extraire les valeurs de couleur de chaque pixel d'une image
+	// Blur image
+	boxKernel, err := boxKernel(3, 1)
+	if err != nil {
+		fmt.Println("Error generating boxKernel:", err)
+		return
+	}
+	blur(&pixels, boxKernel)
+	blurImage := createBlurredImage(pixels)
+	saveImage(blurImage, "resultat_blur_3.jpg")
+}
+
+func openImage(path string) (image.Image, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	fi, _ := f.Stat()
+	fmt.Println(fi.Name())
+
+	img, format, err := image.Decode(f)
+	if err != nil {
+		return nil, err
+	}
+	if format != "jpeg" {
+		return nil, errors.New("image format is not JPEG")
+	}
+
+	return img, nil
+}
+
+func saveImage(img image.Image, filePath string) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return jpeg.Encode(file, img, &jpeg.Options{Quality: jpeg.DefaultQuality})
+}
+
+// Extraire les valeurs de couleur de chaque pixel d'une image
+func extraire_pixel(img image.Image) [][]color.Color {
 	size := img.Bounds().Size()
 	var pixels [][]color.Color
 
@@ -35,31 +80,7 @@ func main() {
 		}
 		pixels = append(pixels, y)
 	}
-
-	// Générer un Gaussian Kernel(taille,sigma) et réaliser le filtrage en blur
-	boxKernel, err := boxKernel(23, 1)
-	if err != nil {
-		fmt.Println("Error generating boxKernel:", err)
-		return
-	}
-	spartialFilter(&pixels, boxKernel)
-
-	// Sauvgarder l'image en blur
-	rect := image.Rect(0, 0, len(pixels), len(pixels[0]))
-	nImg := image.NewRGBA(rect)
-
-	for x := 0; x < len(pixels); x++ {
-		for y := 0; y < len(pixels[0]); y++ {
-			p := pixels[x][y]
-			if p != nil {
-				original, ok := color.RGBAModel.Convert(p).(color.RGBA)
-				if ok {
-					nImg.Set(x, y, original)
-				}
-			}
-		}
-	}
-	saveImage(nImg, "resultat_blur_23.jpg")
+	return pixels
 }
 
 // Calculer le poids de propabilité de chaque points dans le Gaussian Kernel
@@ -94,37 +115,7 @@ func boxKernel(taille int, sigma float64) (*mat.Dense, error) {
 	return mat.NewDense(taille, taille, matrice), nil
 }
 
-func openImage(path string) (image.Image, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	fi, _ := f.Stat()
-	fmt.Println(fi.Name())
-
-	img, format, err := image.Decode(f)
-	if err != nil {
-		return nil, err
-	}
-	if format != "jpeg" {
-		return nil, errors.New("image format is not JPEG")
-	}
-
-	return img, nil
-}
-
-func saveImage(img image.Image, filePath string) error {
-	file, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	return jpeg.Encode(file, img, &jpeg.Options{Quality: jpeg.DefaultQuality})
-}
-
-func spartialFilter(pixels *[][]color.Color, kernel *mat.Dense) {
+func blur(pixels *[][]color.Color, kernel *mat.Dense) {
 	rows, cols := kernel.Dims()
 	offset := rows / 2
 
@@ -159,6 +150,25 @@ func spartialFilter(pixels *[][]color.Color, kernel *mat.Dense) {
 	}
 
 	*pixels = newImage
+}
+
+func createBlurredImage(pixels [][]color.Color) *image.RGBA {
+	rect := image.Rect(0, 0, len(pixels), len(pixels[0]))
+	nImg := image.NewRGBA(rect)
+
+	for x := 0; x < len(pixels); x++ {
+		for y := 0; y < len(pixels[0]); y++ {
+			p := pixels[x][y]
+			if p != nil {
+				original, ok := color.RGBAModel.Convert(p).(color.RGBA)
+				if ok {
+					nImg.Set(x, y, original)
+				}
+			}
+		}
+	}
+
+	return nImg
 }
 
 func toGrayscale(img image.Image) *image.Gray {
