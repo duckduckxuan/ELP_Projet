@@ -24,7 +24,7 @@ func main() {
 	grayImg := toGrayscale(img)
 	saveImage(grayImg, "resultat_gris.jpg")
 
-	// extraire les valeurs de couleur de chaque pixel d'une image
+	// Extraire les valeurs de couleur de chaque pixel d'une image
 	size := img.Bounds().Size()
 	var pixels [][]color.Color
 
@@ -36,16 +36,15 @@ func main() {
 		pixels = append(pixels, y)
 	}
 
-	// calculer le Gaussian Kernel et faire la convolution
-	boxKernel := mat.NewDense(3, 3, []float64{
-		0.075, 0.124, 0.075,
-		0.124, 0.204, 0.124,
-		0.075, 0.124, 0.075,
-	})
-
+	// Générer un Gaussian Kernel(taille,sigma) et réaliser le filtrage en blur
+	boxKernel, err := boxKernel(23, 1)
+	if err != nil {
+		fmt.Println("Error generating boxKernel:", err)
+		return
+	}
 	spartialFilter(&pixels, boxKernel)
 
-	// sauvgarder l'image traitée
+	// Sauvgarder l'image en blur
 	rect := image.Rect(0, 0, len(pixels), len(pixels[0]))
 	nImg := image.NewRGBA(rect)
 
@@ -60,8 +59,39 @@ func main() {
 			}
 		}
 	}
+	saveImage(nImg, "resultat_blur_23.jpg")
+}
 
-	saveImage(nImg, "resultat1.jpg")
+// Calculer le poids de propabilité de chaque points dans le Gaussian Kernel
+func calcul_propa(x float64, y float64, sigma float64) float64 {
+	return math.Exp(-(x*x + y*y) / (2 * sigma * sigma))
+}
+
+// Calculer le Gaussian Kernel selon la taille et la valeur de sigma à choisir
+func boxKernel(taille int, sigma float64) (*mat.Dense, error) {
+	if taille < 1 || taille%2 == 0 {
+		return nil, errors.New("la taille doit être impaire et positive")
+	}
+
+	borne1 := float64(-(taille - 1) / 2)
+	borne2 := float64((taille - 1) / 2)
+	var matrice []float64
+	poids := 0.0
+
+	// Créer le Gaussian Kernel
+	for i := borne1; i <= borne2; i++ {
+		for j := borne1; j <= borne2; j++ {
+			matrice = append(matrice, calcul_propa(i, j, sigma))
+			poids += calcul_propa(i, j, sigma)
+		}
+	}
+
+	// Normaliser le Gaussian Kernel
+	for k := 0; k < len(matrice); k++ {
+		matrice[k] /= poids
+	}
+
+	return mat.NewDense(taille, taille, matrice), nil
 }
 
 func openImage(path string) (image.Image, error) {
@@ -106,6 +136,7 @@ func spartialFilter(pixels *[][]color.Color, kernel *mat.Dense) {
 	for x := offset; x < len(*pixels)-offset; x++ {
 		for y := offset; y < len((*pixels)[0])-offset; y++ {
 			var sumR, sumG, sumB float64
+			// Faire la convolution entre RGB et le Gaussian Kernel
 			for dx := 0; dx < rows; dx++ {
 				for dy := 0; dy < cols; dy++ {
 					pixel := (*pixels)[x+dx-offset][y+dy-offset]
@@ -116,6 +147,7 @@ func spartialFilter(pixels *[][]color.Color, kernel *mat.Dense) {
 					sumB += (float64(b) / 65535) * kernelValue
 				}
 			}
+			// Remplacer par les nouvelles valeurs de RGB (A ne change pas car les photos sont en forme jpg/jpeg)
 			newPixel := color.RGBA{
 				R: uint8(math.Min(math.Max(0, sumR*255), 255)),
 				G: uint8(math.Min(math.Max(0, sumG*255), 255)),
