@@ -37,11 +37,7 @@ func main() {
 	}
 
 	// calculer le Gaussian Kernel et faire la convolution
-	boxKernel := mat.NewDense(3, 3, []float64{
-		0.075, 0.124, 0.075,
-		0.124, 0.204, 0.124,
-		0.075, 0.124, 0.075,
-	})
+	boxKernel := boxKernel(3, 1)
 
 	spartialFilter(&pixels, boxKernel)
 
@@ -62,6 +58,27 @@ func main() {
 	}
 
 	saveImage(nImg, "resultat1.jpg")
+}
+
+func calcul_propa(x float64, y float64, sigma float64) float64 {
+	return math.Exp(-(x*x + y*y) / (2 * sigma * sigma))
+}
+
+func boxKernel(taille int, sigma float64) *mat.Dense {
+	borne1 := float64(-(taille - 1) / 2)
+	borne2 := float64((taille - 1) / 2)
+	var matrice []float64
+	poids := 0.0
+	for i := borne1; i <= borne2; i++ {
+		for j := borne1; j <= borne2; j++ {
+			matrice = append(matrice, calcul_propa(i, j, sigma))
+			poids += calcul_propa(i, j, sigma)
+		}
+	}
+	for k := 0; k < len(matrice); k++ {
+		matrice[k] /= poids
+	}
+	return mat.NewDense(taille, taille, matrice)
 }
 
 func openImage(path string) (image.Image, error) {
