@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// Générer un Gaussian Kernel(taille,sigma) et réaliser le filtrage en blur
-	boxKernel, _ := boxKernel(7, 1)
+	boxKernel, _ := boxKernel(3, 10)
 	spartialFilter(&pixels, boxKernel)
 
 	// Sauvgarder l'image en blur
@@ -55,7 +55,7 @@ func main() {
 			}
 		}
 	}
-	saveImage(nImg, "resultat_blur_7.jpg")
+	saveImage(nImg, "resultat_blur_3_1.jpg")
 }
 
 // Calculer le poids de propabilité de chaque points dans le Gaussian Kernel
