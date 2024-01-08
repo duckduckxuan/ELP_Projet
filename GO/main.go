@@ -37,7 +37,11 @@ func main() {
 	}
 
 	// Générer un Gaussian Kernel(taille,sigma) et réaliser le filtrage en blur
-	boxKernel, _ := boxKernel(23, 1)
+	boxKernel, err := boxKernel(23, 1)
+	if err != nil {
+		fmt.Println("Error generating boxKernel:", err)
+		return
+	}
 	spartialFilter(&pixels, boxKernel)
 
 	// Sauvgarder l'image en blur
