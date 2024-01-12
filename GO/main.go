@@ -8,6 +8,7 @@ import (
 	"image/jpeg"
 	"math"
 	"os"
+	"sync"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -118,6 +119,7 @@ func boxKernel(taille int, sigma float64) (*mat.Dense, error) {
 func blur(pixels *[][]color.Color, kernel *mat.Dense) {
 	rows, cols := kernel.Dims()
 	offset := rows / 2
+	var wait_group sync.WaitGroup
 
 	newImage := make([][]color.Color, len(*pixels))
 	for i := range newImage {
@@ -125,30 +127,34 @@ func blur(pixels *[][]color.Color, kernel *mat.Dense) {
 	}
 
 	for x := offset; x < len(*pixels)-offset; x++ {
-		for y := offset; y < len((*pixels)[0])-offset; y++ {
-			var sumR, sumG, sumB float64
-			// Faire la convolution entre RGB et le Gaussian Kernel
-			for dx := 0; dx < rows; dx++ {
-				for dy := 0; dy < cols; dy++ {
-					pixel := (*pixels)[x+dx-offset][y+dy-offset]
-					r, g, b, _ := pixel.RGBA()
-					kernelValue := kernel.At(dx, dy)
-					sumR += (float64(r) / 65535) * kernelValue
-					sumG += (float64(g) / 65535) * kernelValue
-					sumB += (float64(b) / 65535) * kernelValue
+		wait_group.Add(1)
+		go func(x int) {
+			defer wait_group.Done()
+			for y := offset; y < len((*pixels)[0])-offset; y++ {
+				var sumR, sumG, sumB float64
+				// Faire la convolution entre RGB et le Gaussian Kernel
+				for dx := 0; dx < rows; dx++ {
+					for dy := 0; dy < cols; dy++ {
+						pixel := (*pixels)[x+dx-offset][y+dy-offset]
+						r, g, b, _ := pixel.RGBA()
+						kernelValue := kernel.At(dx, dy)
+						sumR += (float64(r) / 65535) * kernelValue
+						sumG += (float64(g) / 65535) * kernelValue
+						sumB += (float64(b) / 65535) * kernelValue
+					}
 				}
+				// Remplacer par les nouvelles valeurs de RGB (A ne change pas car les photos sont en forme jpg/jpeg)
+				newPixel := color.RGBA{
+					R: uint8(math.Min(math.Max(0, sumR*255), 255)),
+					G: uint8(math.Min(math.Max(0, sumG*255), 255)),
+					B: uint8(math.Min(math.Max(0, sumB*255), 255)),
+					A: 255,
+				}
+				newImage[x][y] = newPixel
 			}
-			// Remplacer par les nouvelles valeurs de RGB (A ne change pas car les photos sont en forme jpg/jpeg)
-			newPixel := color.RGBA{
-				R: uint8(math.Min(math.Max(0, sumR*255), 255)),
-				G: uint8(math.Min(math.Max(0, sumG*255), 255)),
-				B: uint8(math.Min(math.Max(0, sumB*255), 255)),
-				A: 255,
-			}
-			newImage[x][y] = newPixel
-		}
+		}(x)
 	}
-
+	wait_group.Wait()
 	*pixels = newImage
 }
 
