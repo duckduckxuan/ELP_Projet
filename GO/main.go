@@ -29,7 +29,7 @@ func main() {
 	saveImage(grayImg, "resultat_gris.jpg")
 
 	// Blur image
-	boxKernel, err := boxKernel(3, 1)
+	boxKernel, err := boxKernel(111, 1)
 	if err != nil {
 		fmt.Println("Error generating boxKernel:", err)
 		return
