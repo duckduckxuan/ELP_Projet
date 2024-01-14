@@ -28,7 +28,7 @@ func main() {
 	grayImg := toGrayscale(img)
 	saveImage(grayImg, "resultat_gris.jpg")
 
-	// Blur image
+	// Flouter l'image et rentourner l'image floutée
 	boxKernel, err := boxKernel(5, 7)
 	if err != nil {
 		fmt.Println("Error generating boxKernel:", err)
@@ -116,7 +116,7 @@ func boxKernel(taille int, sigma float64) (*mat.Dense, error) {
 	return mat.NewDense(taille, taille, matrice), nil
 }
 
-// Flouter l'image
+// Flouter l'image par la convolution
 func blur(pixels *[][]color.Color, kernel *mat.Dense, numXSections int, numYSections int) {
 	rows, cols := kernel.Dims()
 	offset := rows / 2
@@ -200,6 +200,7 @@ func blur(pixels *[][]color.Color, kernel *mat.Dense, numXSections int, numYSect
 	*pixels = newImage
 }
 
+// Tranformer la matrice "color.Color" vers l'objet "image.RGBA"
 func createBlurredImage(pixels [][]color.Color) *image.RGBA {
 	rect := image.Rect(0, 0, len(pixels), len(pixels[0]))
 	nImg := image.NewRGBA(rect)
