@@ -89,7 +89,7 @@ func calculPropability(x float64, y float64, sigma float64) float64 {
 	return math.Exp(-(x*x + y*y) / (2 * sigma * sigma))
 }
 
-// Calculer le Gaussian Kernel selon la taille du Kernel et la valeur du sigma à choisir
+// Calculer le Gaussian Kernel selon la taille du Kernel (normalement 3*3 ou 5*5) et la valeur du sigma à choisir
 func boxKernel(taille int, sigma float64) (*mat.Dense, error) {
 	if taille < 1 || taille%2 == 0 {
 		return nil, errors.New("la taille doit être impaire et positive")
