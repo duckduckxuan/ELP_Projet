@@ -29,14 +29,14 @@ func main() {
 	saveImage(grayImg, "resultat_gris.jpg")
 
 	// Blur image
-	boxKernel, err := boxKernel(111, 1)
+	boxKernel, err := boxKernel(5, 7)
 	if err != nil {
 		fmt.Println("Error generating boxKernel:", err)
 		return
 	}
-	blur(&pixels, boxKernel)
+	blur(&pixels, boxKernel, 10, 10)
 	blurImage := createBlurredImage(pixels)
-	saveImage(blurImage, "resultat_blur_3.jpg")
+	saveImage(blurImage, "resultat_blur.jpg")
 }
 
 func openImage(path string) (image.Image, error) {
@@ -116,7 +116,8 @@ func boxKernel(taille int, sigma float64) (*mat.Dense, error) {
 	return mat.NewDense(taille, taille, matrice), nil
 }
 
-func blur(pixels *[][]color.Color, kernel *mat.Dense) {
+// Flouter l'image
+func blur(pixels *[][]color.Color, kernel *mat.Dense, numXSections int, numYSections int) {
 	rows, cols := kernel.Dims()
 	offset := rows / 2
 	var wait_group sync.WaitGroup
@@ -126,34 +127,75 @@ func blur(pixels *[][]color.Color, kernel *mat.Dense) {
 		newImage[i] = make([]color.Color, len((*pixels)[0]))
 	}
 
-	for x := offset; x < len(*pixels)-offset; x++ {
-		wait_group.Add(1)
-		go func(x int) {
-			defer wait_group.Done()
-			for y := offset; y < len((*pixels)[0])-offset; y++ {
-				var sumR, sumG, sumB float64
-				// Faire la convolution entre RGB et le Gaussian Kernel
-				for dx := 0; dx < rows; dx++ {
-					for dy := 0; dy < cols; dy++ {
-						pixel := (*pixels)[x+dx-offset][y+dy-offset]
-						r, g, b, _ := pixel.RGBA()
-						kernelValue := kernel.At(dx, dy)
-						sumR += (float64(r) / 65535) * kernelValue
-						sumG += (float64(g) / 65535) * kernelValue
-						sumB += (float64(b) / 65535) * kernelValue
+	// Définir la longueur d'une section
+	sectionWidth := len(*pixels) / numXSections
+	sectionHeight := len((*pixels)[0]) / numYSections
+
+	// Parcourir les sections différentes
+	for sx := 0; sx < numXSections; sx++ {
+		for sy := 0; sy < numYSections; sy++ {
+
+			// Calculer la position du départ et d'arrivée
+			startX := sx * sectionWidth
+			endX := startX + sectionWidth
+			startY := sy * sectionHeight
+			endY := startY + sectionHeight
+
+			// Modifier la position d'arrivée de la dernière section
+			if sx == numXSections-1 {
+				endX = len(*pixels)
+			}
+			if sy == numYSections-1 {
+				endY = len((*pixels)[0])
+			}
+
+			wait_group.Add(1)
+
+			// Créer une goroutine
+			go func(startX, endX, startY, endY int) {
+				defer wait_group.Done()
+
+				// Parcourir tout les pixels d'une section
+				for x := startX; x < endX; x++ {
+					for y := startY; y < endY; y++ {
+						var sumR, sumG, sumB float64
+
+						// Parcourir les pixels d'une partie à faire la convolution
+						for dx := 0; dx < rows; dx++ {
+							for dy := 0; dy < cols; dy++ {
+								px := x + dx - offset
+								py := y + dy - offset
+
+								// Vérifier le bord
+								if px < 0 || px >= len(*pixels) || py < 0 || py >= len((*pixels)[0]) {
+									continue
+								}
+
+								// Faire la convolution
+								pixel := (*pixels)[px][py]
+								r, g, b, _ := pixel.RGBA()
+								kernelValue := kernel.At(dx, dy)
+								sumR += (float64(r) / 65535) * kernelValue
+								sumG += (float64(g) / 65535) * kernelValue
+								sumB += (float64(b) / 65535) * kernelValue
+							}
+						}
+
+						// Modifier les valeurs RGB (la valeur de A ne change pas car l'image est en forme jpg/jpeg mais pas png)
+						newPixel := color.RGBA{
+							R: uint8(math.Min(math.Max(0, sumR*255), 255)),
+							G: uint8(math.Min(math.Max(0, sumG*255), 255)),
+							B: uint8(math.Min(math.Max(0, sumB*255), 255)),
+							A: 255,
+						}
+						newImage[x][y] = newPixel
 					}
 				}
-				// Remplacer par les nouvelles valeurs de RGB (A ne change pas car les photos sont en forme jpg/jpeg)
-				newPixel := color.RGBA{
-					R: uint8(math.Min(math.Max(0, sumR*255), 255)),
-					G: uint8(math.Min(math.Max(0, sumG*255), 255)),
-					B: uint8(math.Min(math.Max(0, sumB*255), 255)),
-					A: 255,
-				}
-				newImage[x][y] = newPixel
-			}
-		}(x)
+			}(startX, endX, startY, endY)
+		}
 	}
+
+	// Attendre la fin de toutes les goroutines
 	wait_group.Wait()
 	*pixels = newImage
 }
