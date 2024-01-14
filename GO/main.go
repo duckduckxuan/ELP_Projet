@@ -89,7 +89,7 @@ func calculPropability(x float64, y float64, sigma float64) float64 {
 	return math.Exp(-(x*x + y*y) / (2 * sigma * sigma))
 }
 
-// Calculer le Gaussian Kernel selon la taille et la valeur de sigma à choisir
+// Calculer le Gaussian Kernel selon la taille du Kernel et la valeur du sigma à choisir
 func boxKernel(taille int, sigma float64) (*mat.Dense, error) {
 	if taille < 1 || taille%2 == 0 {
 		return nil, errors.New("la taille doit être impaire et positive")
@@ -116,7 +116,7 @@ func boxKernel(taille int, sigma float64) (*mat.Dense, error) {
 	return mat.NewDense(taille, taille, matrice), nil
 }
 
-// Flouter l'image par la convolution
+// Flouter l'image par la convolution avec le nombre des sections changeable
 func blur(pixels *[][]color.Color, kernel *mat.Dense, numXSections int, numYSections int) {
 	rows, cols := kernel.Dims()
 	offset := rows / 2
