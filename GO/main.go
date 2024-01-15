@@ -30,7 +30,7 @@ func main() {
 	saveImage(grayImg, "resultat_gris.jpg")
 
 	// Flouter l'image et rentourner l'image floutée
-	boxKernel, err := boxKernel(5, 7)
+	boxKernel, err := boxKernel(5, 120)
 
 	if err != nil {
 		fmt.Println("Error generating boxKernel:", err)
