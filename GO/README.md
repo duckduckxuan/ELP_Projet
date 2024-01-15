@@ -3,5 +3,6 @@
 Projet sur traitement des images
 
 Fonctionnements réalisés:
-1. Flouter les images
-2. Griser les images
+1. Flouter l'image.
+2. Griser l'image.
+3. Inverser l'image.
