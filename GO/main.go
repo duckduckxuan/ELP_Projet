@@ -37,6 +37,17 @@ func main() {
 	blur(&pixels, boxKernel, 10, 10)
 	blurImage := createBlurredImage(pixels)
 	saveImage(blurImage, "resultat_blur.jpg")
+
+	// code pour inverder l'image
+
+	img2, err2 := openImage("image1.jpg")
+	if err2 != nil {
+		fmt.Println("Erreur lors de l'ouverture de l'image:", err2)
+		return
+	}
+
+	imgInverse := inverserImageVerticalement(img2)
+	saveImage(imgInverse, "resultat_inversé.jpg")
 }
 
 func openImage(path string) (image.Image, error) {
@@ -251,4 +262,57 @@ func luminance(c color.Color) float64 {
 
 	// Calculer la luminance (moyenne pondérée)
 	return 0.299*float64(r) + 0.587*float64(g) + 0.114*float64(b)
+}
+
+// inverserImageVerticalement inverse une image verticalement en utilisant des goroutines et retourne le résultat.
+func inverserImageVerticalement(img image.Image) image.Image {
+	// Obtenir les dimensions de l'image
+	limites := img.Bounds()
+	largeur, hauteur := limites.Dx(), limites.Dy()
+	imgInverse := image.NewRGBA(limites)
+	var wg sync.WaitGroup
+
+	// Spécifier le nombre de goroutines (travailleurs) en fonction de la hauteur de l'image
+	nombreTravailleurs := hauteur
+
+	// Créer un canal pour les résultats des goroutines
+	resultats := make(chan struct {
+		x, y    int
+		couleur color.Color
+	}, hauteur)
+
+	// Démarrer les goroutines
+	for i := 0; i < nombreTravailleurs; i++ {
+		wg.Add(1)
+		go func(idTravailleur int) {
+			defer wg.Done()
+			for y := idTravailleur; y < hauteur; y += nombreTravailleurs {
+				for x := 0; x < largeur; x++ {
+					couleurOriginale := img.At(x, hauteur-y-1) // Inverser verticalement
+					resultats <- struct {
+						x, y    int
+						couleur color.Color
+					}{x, y, couleurOriginale} // Envoyer le résultat au canal
+				}
+			}
+		}(i)
+	}
+
+	// Démarrer une goroutine pour fermer le canal des résultats lorsque tous les travailleurs ont terminé
+	go func() {
+		wg.Wait()
+		close(resultats)
+	}()
+
+	// Démarrer une goroutine pour traiter les résultats et remplir l'image inversée
+	go func() {
+		for resultat := range resultats {
+			imgInverse.Set(resultat.x, resultat.y, resultat.couleur)
+		}
+	}()
+
+	// Attendre que toutes les goroutines se terminent
+	wg.Wait()
+
+	return imgInverse
 }
