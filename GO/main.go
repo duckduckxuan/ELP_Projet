@@ -16,6 +16,7 @@ import (
 func main() {
 	// Ouvrir l'image
 	img, err := openImage("photo1.jpg")
+
 	if err != nil {
 		fmt.Println("Error opening image:", err)
 		return
@@ -30,17 +31,19 @@ func main() {
 
 	// Flouter l'image et rentourner l'image floutée
 	boxKernel, err := boxKernel(5, 7)
+
 	if err != nil {
 		fmt.Println("Error generating boxKernel:", err)
 		return
 	}
+
 	blur(&pixels, boxKernel, 10, 10)
 	blurImage := createBlurredImage(pixels)
 	saveImage(blurImage, "resultat_blur.jpg")
 
 	// code pour inverder l'image
-
 	img2, err2 := openImage("image1.jpg")
+
 	if err2 != nil {
 		fmt.Println("Erreur lors de l'ouverture de l'image:", err2)
 		return
