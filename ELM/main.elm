@@ -1,14 +1,5 @@
 module Main exposing (..)
-
-import Browser exposing (beginnerProgram)
-import Html exposing (..)
-import Html.Events exposing (onClick)
-
-view jeu =
-    h1 []
-        [ Html.div [] [Html.text "Guess it!"]
-        ]
+import Html
 
 main =
-    beginnerProgram
-        { view = view }
+    Html.text "Guess it!"
