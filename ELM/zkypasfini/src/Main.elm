@@ -6,12 +6,14 @@ import Html.Attributes exposing (value)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode as Json exposing (Decoder, field, string, list)
+import Random exposing (Generator, int, initialSeed, step, generate)
 
 -- Model
 type alias Model =
     { word : String
     , definition : String
     , guessedCorrectly : Bool
+    , wordList : List String
     }
 
 -- Msg
@@ -20,6 +22,8 @@ type Msg
     | DefinitionFetched (Result Http.Error (List Definition))
     | ClearDefinition
     | UpdateWord String
+    | RandomWordButtonClicked
+    | RandomWordGenerated Int
 
 type alias Definition =
     { meanings : List Meaning }
@@ -30,10 +34,21 @@ type alias Meaning =
 -- init
 init : () -> (Model, Cmd Msg)
 init _ =
-    ({ word = ""
-    , definition = ""
-    , guessedCorrectly = False
-    }, Cmd.none)
+    let
+        model =
+            { word = ""
+            , definition = ""
+            , guessedCorrectly = False
+            , wordList =
+                [ "apple"
+                , "banana"
+                , "cherry"
+                -- 添加更多单词
+                ]
+            }
+        cmd = getRandomWord model
+    in
+    (model, cmd)
 
 -- update
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -64,14 +79,15 @@ update msg model =
         UpdateWord newWord ->
             ( { model | word = newWord, definition = "", guessedCorrectly = False }, Cmd.none )
 
+        RandomWordButtonClicked ->
+            (model, getRandomWord model)
+
 -- fetchDefinition
 fetchDefinition : String -> Cmd Msg
 fetchDefinition word =
-    Http.get
-        { expect = Http.expectJson definitionDecoder
-        , url = urlForWord word
-        }
+    Http.get { url = urlForWord word, expect = Http.expectJson definitionDecoder }
 
+-- urlForWord
 urlForWord : String -> String
 urlForWord word =
     "https://api.dictionaryapi.dev/api/v2/entries/en/" ++ word
@@ -90,6 +106,7 @@ view model =
             ]
         , button [ onClick FetchDefinition ] [ text "Fetch Definition" ]
         , button [ onClick ClearDefinition ] [ text "Clear Definition" ]
+        , button [ onClick RandomWordButtonClicked ] [ text "Random Word" ]  -- 添加一个按钮用于获取随机单词
         , div []
             [ if model.guessedCorrectly then
                 text ("Got it! It is indeed " ++ model.word)
@@ -107,3 +124,31 @@ subscriptions _ =
 main : Program () Model Msg
 main =
     Browser.element { init = init, update = update, view = view, subscriptions = subscriptions }
+
+-- 随机单词生成器
+randomWordIndexGenerator : Int -> Generator Int
+randomWordIndexGenerator listLength =
+    int 0 (listLength - 1)
+
+-- 获取随机单词的命令
+getRandomWord : Model -> Cmd Msg
+getRandomWord model =
+    let
+        generator = randomWordIndexGenerator (List.length model.wordList)
+    in
+    Random.generate (\index -> UpdateWord (Maybe.withDefault "" (getAt index model.wordList))) generator
+
+-- 获取列表中指定索引的元素
+getAt : Int -> List a -> Maybe a
+getAt n list =
+    if n < 0 then
+        Nothing
+    else
+        case list of
+            [] ->
+                Nothing
+            x :: xs ->
+                if n == 0 then
+                    Just x
+                else
+                    getAt (n - 1) xs
