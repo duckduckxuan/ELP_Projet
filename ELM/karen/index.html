@@ -4525,96 +4525,6 @@ var $elm$core$List$drop = F2(
 			}
 		}
 	});
-var $elm$core$Basics$add = _Basics_add;
-var $elm$core$List$foldl = F3(
-	function (func, acc, list) {
-		foldl:
-		while (true) {
-			if (!list.b) {
-				return acc;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				var $temp$func = func,
-					$temp$acc = A2(func, x, acc),
-					$temp$list = xs;
-				func = $temp$func;
-				acc = $temp$acc;
-				list = $temp$list;
-				continue foldl;
-			}
-		}
-	});
-var $elm$core$Basics$gt = _Utils_gt;
-var $elm$core$List$reverse = function (list) {
-	return A3($elm$core$List$foldl, $elm$core$List$cons, _List_Nil, list);
-};
-var $elm$core$List$foldrHelper = F4(
-	function (fn, acc, ctr, ls) {
-		if (!ls.b) {
-			return acc;
-		} else {
-			var a = ls.a;
-			var r1 = ls.b;
-			if (!r1.b) {
-				return A2(fn, a, acc);
-			} else {
-				var b = r1.a;
-				var r2 = r1.b;
-				if (!r2.b) {
-					return A2(
-						fn,
-						a,
-						A2(fn, b, acc));
-				} else {
-					var c = r2.a;
-					var r3 = r2.b;
-					if (!r3.b) {
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(fn, c, acc)));
-					} else {
-						var d = r3.a;
-						var r4 = r3.b;
-						var res = (ctr > 500) ? A3(
-							$elm$core$List$foldl,
-							fn,
-							acc,
-							$elm$core$List$reverse(r4)) : A4($elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(
-									fn,
-									c,
-									A2(fn, d, res))));
-					}
-				}
-			}
-		}
-	});
-var $elm$core$List$foldr = F3(
-	function (fn, acc, ls) {
-		return A4($elm$core$List$foldrHelper, fn, acc, 0, ls);
-	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
@@ -4632,6 +4542,7 @@ var $elm$random$Random$Seed = F2(
 	function (a, b) {
 		return {$: 'Seed', a: a, b: b};
 	});
+var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Basics$mul = _Basics_mul;
 var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var $elm$random$Random$next = function (_v0) {
@@ -4699,6 +4610,25 @@ var $elm$random$Random$int = F2(
 				}
 			});
 	});
+var $elm$core$List$foldl = F3(
+	function (func, acc, list) {
+		foldl:
+		while (true) {
+			if (!list.b) {
+				return acc;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				var $temp$func = func,
+					$temp$acc = A2(func, x, acc),
+					$temp$list = xs;
+				func = $temp$func;
+				acc = $temp$acc;
+				list = $temp$list;
+				continue foldl;
+			}
+		}
+	});
 var $elm$core$List$length = function (xs) {
 	return A3(
 		$elm$core$List$foldl,
@@ -4709,12 +4639,15 @@ var $elm$core$List$length = function (xs) {
 		0,
 		xs);
 };
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$random$Random$step = F2(
 	function (_v0, seed) {
 		var generator = _v0.a;
 		return generator(seed);
 	});
+var $elm$core$Basics$gt = _Utils_gt;
+var $elm$core$List$reverse = function (list) {
+	return A3($elm$core$List$foldl, $elm$core$List$cons, _List_Nil, list);
+};
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
 		takeReverse:
@@ -4850,38 +4783,36 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
-var $author$project$Main$getRandomWord = function (previousWord) {
-	var wordList = _List_fromArray(
-		['chat', 'chien', 'maison', 'fleur', 'arbre', 'ordinateur', 'soleil', 'plage', 'montagne', 'avion', 'étoile', 'livre', 'papillon', 'écran', 'jardin', 'église', 'rivière', 'cadeau', 'bicyclette', 'lumière']);
-	var newWordList = A2(
-		$elm$core$List$filter,
-		function (word) {
-			return !_Utils_eq(word, previousWord);
-		},
-		wordList);
-	var randomIndexGenerator = A2(
-		$elm$random$Random$int,
-		0,
-		$elm$core$List$length(newWordList) - 1);
-	var _v0 = A2(
-		$elm$random$Random$step,
-		randomIndexGenerator,
-		$elm$random$Random$initialSeed(42));
-	var randomIndex = _v0.a;
-	var randomElement = A2(
-		$elm$core$List$take,
-		1,
-		A2($elm$core$List$drop, randomIndex, newWordList));
-	return A2(
-		$elm$core$Maybe$withDefault,
-		'Mot par défaut',
-		$elm$core$List$head(randomElement));
-};
+var $author$project$Main$getRandomWord = F2(
+	function (previousWord, seed) {
+		var wordList = _List_fromArray(
+			['chat', 'chien', 'maison', 'fleur', 'arbre', 'ordinateur', 'soleil', 'plage', 'montagne', 'avion', 'étoile', 'livre', 'papillon', 'écran', 'jardin', 'église', 'rivière', 'cadeau', 'bicyclette', 'lumière']);
+		var randomIndexGenerator = A2(
+			$elm$random$Random$int,
+			0,
+			$elm$core$List$length(wordList) - 1);
+		var _v0 = A2(
+			$elm$random$Random$step,
+			randomIndexGenerator,
+			$elm$random$Random$initialSeed(seed));
+		var randomIndex = _v0.a;
+		var randomElement = A2(
+			$elm$core$List$take,
+			1,
+			A2($elm$core$List$drop, randomIndex, wordList));
+		return A2(
+			$elm$core$Maybe$withDefault,
+			'Mot par défaut',
+			$elm$core$List$head(randomElement));
+	});
 var $author$project$Main$init = {
 	guessed: false,
 	message: '',
+	randomSeed: 42,
+	showAnswer: false,
+	title: 'Guess it!',
 	userInput: '',
-	wordToGuess: $author$project$Main$getRandomWord('')
+	wordToGuess: A2($author$project$Main$getRandomWord, '', 42)
 };
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
@@ -5400,6 +5331,61 @@ var $elm$core$Task$Perform = function (a) {
 };
 var $elm$core$Task$succeed = _Scheduler_succeed;
 var $elm$core$Task$init = $elm$core$Task$succeed(_Utils_Tuple0);
+var $elm$core$List$foldrHelper = F4(
+	function (fn, acc, ctr, ls) {
+		if (!ls.b) {
+			return acc;
+		} else {
+			var a = ls.a;
+			var r1 = ls.b;
+			if (!r1.b) {
+				return A2(fn, a, acc);
+			} else {
+				var b = r1.a;
+				var r2 = r1.b;
+				if (!r2.b) {
+					return A2(
+						fn,
+						a,
+						A2(fn, b, acc));
+				} else {
+					var c = r2.a;
+					var r3 = r2.b;
+					if (!r3.b) {
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(fn, c, acc)));
+					} else {
+						var d = r3.a;
+						var r4 = r3.b;
+						var res = (ctr > 500) ? A3(
+							$elm$core$List$foldl,
+							fn,
+							acc,
+							$elm$core$List$reverse(r4)) : A4($elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(
+									fn,
+									c,
+									A2(fn, d, res))));
+					}
+				}
+			}
+		}
+	});
+var $elm$core$List$foldr = F3(
+	function (fn, acc, ls) {
+		return A4($elm$core$List$foldrHelper, fn, acc, 0, ls);
+	});
 var $elm$core$List$map = F2(
 	function (f, xs) {
 		return A3(
@@ -5512,34 +5498,50 @@ var $elm$browser$Browser$sandbox = function (impl) {
 };
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'UpdateInput') {
-			var input = msg.a;
-			var result = _Utils_eq(input, model.wordToGuess) ? 'Bravo! Tu as trouvé le mot.' : 'Essaie de deviner.';
-			return _Utils_update(
-				model,
-				{
-					guessed: _Utils_eq(input, model.wordToGuess),
-					message: result,
-					userInput: input
-				});
-		} else {
-			return _Utils_update(
-				model,
-				{
-					guessed: false,
-					message: '',
-					userInput: '',
-					wordToGuess: $author$project$Main$getRandomWord(model.wordToGuess)
-				});
+		switch (msg.$) {
+			case 'UpdateInput':
+				var input = msg.a;
+				var isCorrect = _Utils_eq(input, model.wordToGuess);
+				var newTitle = isCorrect ? model.wordToGuess : model.title;
+				var result = isCorrect ? 'Bravo! Tu as trouvé le mot.' : 'Essaie de deviner.';
+				return _Utils_update(
+					model,
+					{guessed: isCorrect, message: result, title: newTitle, userInput: input});
+			case 'NewWord':
+				var newSeed = model.randomSeed + 1;
+				var newWord = A2($author$project$Main$getRandomWord, model.wordToGuess, newSeed);
+				return _Utils_update(
+					model,
+					{guessed: false, message: '', randomSeed: newSeed, showAnswer: false, title: 'Guess it!', userInput: '', wordToGuess: newWord});
+			default:
+				var isChecked = msg.a;
+				return isChecked ? _Utils_update(
+					model,
+					{showAnswer: true, title: model.wordToGuess}) : _Utils_update(
+					model,
+					{showAnswer: false, title: 'Guess it!'});
 		}
 	});
 var $author$project$Main$NewWord = {$: 'NewWord'};
+var $author$project$Main$ToggleShowAnswer = function (a) {
+	return {$: 'ToggleShowAnswer', a: a};
+};
 var $author$project$Main$UpdateInput = function (a) {
 	return {$: 'UpdateInput', a: a};
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$label = _VirtualDom_node('label');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -5601,6 +5603,12 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $elm$html$Html$Events$targetChecked = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'checked']),
+	$elm$json$Json$Decode$bool);
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
@@ -5620,7 +5628,7 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text(model.wordToGuess)
+						$elm$html$Html$text(model.title)
 					])),
 				A2(
 				$elm$html$Html$button,
@@ -5662,6 +5670,25 @@ var $author$project$Main$view = function (model) {
 					[
 						$elm$html$Html$text(
 						model.guessed ? 'Tu as gagné!' : '')
+					])),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('checkbox'),
+						A2(
+						$elm$html$Html$Events$on,
+						'change',
+						A2($elm$json$Json$Decode$map, $author$project$Main$ToggleShowAnswer, $elm$html$Html$Events$targetChecked)),
+						$elm$html$Html$Attributes$checked(model.showAnswer)
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$label,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Show the answer')
 					]))
 			]));
 };
