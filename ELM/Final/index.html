@@ -4786,7 +4786,7 @@ var $elm$core$Maybe$withDefault = F2(
 var $author$project$Main$getRandomWord = F2(
 	function (previousWord, seed) {
 		var wordList = _List_fromArray(
-			['chat', 'chien', 'maison', 'fleur', 'arbre', 'ordinateur', 'soleil', 'plage', 'montagne', 'avion', 'étoile', 'livre', 'papillon', 'écran', 'jardin', 'église', 'rivière', 'cadeau', 'bicyclette', 'lumière']);
+			['hello', 'dog', 'cat', 'happy', 'sun', 'moon', 'star', 'tree', 'flower', 'bird', 'computer', 'phone', 'book', 'pen', 'paper', 'cup', 'water', 'fire', 'earth', 'wind']);
 		var randomIndexGenerator = A2(
 			$elm$random$Random$int,
 			0,
@@ -4802,7 +4802,7 @@ var $author$project$Main$getRandomWord = F2(
 			A2($elm$core$List$drop, randomIndex, wordList));
 		return A2(
 			$elm$core$Maybe$withDefault,
-			'Mot par défaut',
+			'Default word',
 			$elm$core$List$head(randomElement));
 	});
 var $author$project$Main$init = {

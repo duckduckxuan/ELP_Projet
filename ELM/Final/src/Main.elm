@@ -74,8 +74,8 @@ getRandomWord : String -> Int -> String
 getRandomWord previousWord seed =
     let
         wordList = 
-            [ "chat", "chien", "maison", "fleur", "arbre", "ordinateur", "soleil", "plage", "montagne", "avion"
-            , "étoile", "livre", "papillon", "écran", "jardin", "église", "rivière", "cadeau", "bicyclette", "lumière"
+            [ "hello", "dog", "cat", "happy", "sun", "moon", "star", "tree", "flower", "bird"
+            , "computer", "phone", "book", "pen", "paper", "cup", "water", "fire", "earth", "wind"
             ]
         randomIndexGenerator =
             Random.int 0 (List.length wordList - 1)
@@ -84,8 +84,7 @@ getRandomWord previousWord seed =
         randomElement =
             List.take 1 (List.drop randomIndex wordList)
     in
-    Maybe.withDefault "Mot par défaut" (List.head randomElement)
-
+    Maybe.withDefault "Default word" (List.head randomElement)
 
 view : Model -> Html Msg
 view model =
