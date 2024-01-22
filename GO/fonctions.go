@@ -13,7 +13,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-func main() {
+func Traitement() {
 	// Ouvrir l'image
 	img, err := openImage("photo1.jpg")
 
