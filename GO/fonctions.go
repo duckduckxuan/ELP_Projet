@@ -13,7 +13,37 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-func main() {
+// Partager avec server.go
+func Traitement_griser() {
+	// Ouvrir l'image
+	img, err := openImage("photo1.jpg")
+
+	if err != nil {
+		fmt.Println("Error opening image:", err)
+		return
+	}
+
+	// Convertir l'image en noir et blanc
+	grayImg := toGrayscale(img)
+	saveImage(grayImg, "resultat_gris.jpg")
+}
+
+// Partager avec server.go
+func Traitement_inverser() {
+	// Ouvrir l'image
+	img, err := openImage("image1.jpg")
+
+	if err != nil {
+		fmt.Println("Erreur lors de l'ouverture de l'image:", err)
+		return
+	}
+	// Inverser l'image
+	imgInverse := inverserImageVerticalement(img)
+	saveImage(imgInverse, "resultat_inversé.jpg")
+}
+
+// Partager avec server.go
+func Traitement_flouter() {
 	// Ouvrir l'image
 	img, err := openImage("photo1.jpg")
 
@@ -40,17 +70,6 @@ func main() {
 	blur(&pixels, boxKernel, 10, 10)
 	blurImage := createBlurredImage(pixels)
 	saveImage(blurImage, "resultat_blur.jpg")
-
-	// code pour inverder l'image
-	img2, err2 := openImage("image1.jpg")
-
-	if err2 != nil {
-		fmt.Println("Erreur lors de l'ouverture de l'image:", err2)
-		return
-	}
-
-	imgInverse := inverserImageVerticalement(img2)
-	saveImage(imgInverse, "resultat_inversé.jpg")
 }
 
 func openImage(path string) (image.Image, error) {
