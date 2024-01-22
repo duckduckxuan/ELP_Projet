@@ -83,7 +83,7 @@ update msg model =
                 { model | showAnswer = False, title = "Guess it!" }
         
         InitialiserJeu ->
-            { model | jeuInitialise= True 
+            { model | jeuInitialise= True }
 
 -- Ajoutez une fonction de style pour gérer la visibilité
 hiddenStyle : Bool -> List (Html.Attribute a)
