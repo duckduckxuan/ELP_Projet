@@ -1,6 +1,6 @@
 module Aleatoire exposing (getRandomWord)
-import Random exposing (initialSeed, int, Seed, step, Generator)
 
+import Random exposing (initialSeed, int, Seed, step, Generator)
 import List exposing (head)
 import Maybe exposing (withDefault)
 
@@ -8,8 +8,8 @@ getRandomWord : String -> Int -> String
 getRandomWord previousWord seed =
     let
         wordList = 
-            [ "hello", "dog", "cat", "happy", "sun", "moon", "star", "tree", "flower", "bird"
-            , "computer", "phone", "book", "pen", "paper", "cup", "water", "fire", "earth", "wind"
+            [ "a", "anywhere", "below", "burn", "climb", "able", "apartment", "bend",
+             "bus", "close", "about", "appear", "beneath", "business", "clothes", "above", "approach", "beside"
             ]
         randomIndexGenerator =
             Random.int 0 (List.length wordList - 1)
