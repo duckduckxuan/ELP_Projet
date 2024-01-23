@@ -45,7 +45,7 @@ func main() {
 			}
 			// Wait for server to acknowledge the disconnect
 			n, err = conn.Read(buffer)
-			fmt.Print("Disconnecting......")
+			fmt.Println("Disconnecting......")
 			if err != nil {
 				log.Fatal("Error reading:", err)
 			}
@@ -53,7 +53,7 @@ func main() {
 
 		// Enter correct choice
 		default:
-			fmt.Print("Invalid choice")
+			fmt.Println("Invalid choice")
 		}
 	}
 }
