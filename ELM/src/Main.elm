@@ -1,12 +1,22 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, div, h1, button, text, input, label)
+import Html exposing (Html, div, h1, button, text, input, label, pre)
 import Html.Attributes exposing (placeholder, type_, style, checked)
 import Html.Events exposing (onClick, onInput)
 import Random exposing (initialSeed, int, Seed, step, Generator)
 import Aleatoire exposing (getRandomWord)
 import Json.Decode
+import String
+import List exposing (map)
+import Http  
+
+
+main =
+    Browser.sandbox 
+    { init = init
+    , update = update
+    , view = view }
 
 type alias Model =
     { motChoisi : String
@@ -16,6 +26,7 @@ type alias Model =
     , title : String
     , showAnswer : Bool 
     , randomSeed : Int
+    , jeuInitialise : Bool
     }
 
 init : Model
@@ -27,12 +38,14 @@ init =
     , title = "Guess it!"
     , showAnswer = False
     , randomSeed = 42
+    , jeuInitialise = False 
     }
 
 type Msg
     = ChangerMot
     | ActualiserInput String
     | MontrerReponse Bool 
+    | InitialiserJeu 
 
 update : Msg -> Model -> Model
 update msg model =
@@ -68,23 +81,30 @@ update msg model =
                 { model | showAnswer = True, title = model.motChoisi}
             else
                 { model | showAnswer = False, title = "Guess it!" }
+        
+        InitialiserJeu ->
+            { model | jeuInitialise= True }
 
+-- Ajoutez une fonction de style pour gérer la visibilité
+hiddenStyle : Bool -> List (Html.Attribute a)
+hiddenStyle isVisible =
+    if isVisible then
+        []
+    else
+        [ style "display" "none" ]
 
--- VIEW
+-- ...
+
+-- Modifiez la fonction view pour utiliser la fonction de style
 view : Model -> Html Msg
 view model =
     div []
-        [ div [ style "font-size" "24px", style "font-weight" "bold" ] [ text model.title ]
-        , button [ onClick ChangerMot, onInput ActualiserInput ] [ text "Choisir un autre mot"]
-        , input [ type_ "text", placeholder "Entre ton mot", Html.Attributes.value model.inputUser, onInput ActualiserInput] []
-        , div [] [ text model.message ]
-        , div
-            [ style "color" <| if model.motTrouve then "green" else "black" ]
-            [ text <| if model.motTrouve then "Tu as gagné!" else "" ]
-        , input [ type_ "checkbox", Html.Events.on "change" (Json.Decode.map MontrerReponse Html.Events.targetChecked), checked model.showAnswer ] []
-        , label [] [ text "Show the answer" ]      
+        [ button [ onClick InitialiserJeu ] [ text "Initialiser le jeu" ]
+        , div ([ style "font-size" "24px", style "font-weight" "bold" ] ++ hiddenStyle model.jeuInitialise) [ text model.title ]
+        , button ([ onClick ChangerMot, onInput ActualiserInput ] ++ hiddenStyle model.jeuInitialise) [ text "Choisir un autre mot"]
+        , input ([ type_ "text", placeholder "Entre ton mot", Html.Attributes.value model.inputUser, onInput ActualiserInput] ++ hiddenStyle model.jeuInitialise) []
+        , div (hiddenStyle model.jeuInitialise) [ text model.message ]
+        , div ([ style "color" <| if model.motTrouve then "green" else "black" ] ++ hiddenStyle model.jeuInitialise) [ text <| if model.motTrouve then "Tu as gagné!" else "" ]
+        , input ([ type_ "checkbox", Html.Events.on "change" (Json.Decode.map MontrerReponse Html.Events.targetChecked), checked model.showAnswer ] ++ hiddenStyle model.jeuInitialise) []
+        , label (hiddenStyle model.jeuInitialise) [ text "Show the answer" ]      
         ]
-
-
-main =
-    Browser.sandbox { init = init, update = update, view = view }
