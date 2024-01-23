@@ -1,110 +1,145 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, div, h1, button, text, input, label, pre)
+import Html exposing (Html, div, h1, button, text, input, label, pre, ul, li)
 import Html.Attributes exposing (placeholder, type_, style, checked)
 import Html.Events exposing (onClick, onInput)
-import Random exposing (initialSeed, int, Seed, step, Generator)
-import Aleatoire exposing (getRandomWord)
-import Json.Decode
+import Json.Decode exposing (Decoder, list, field, string, map, map2)
+import Random exposing (int,initialSeed, Seed, step, Generator)
+import List exposing (map, head)
+import MotAleatoire exposing (getRandomWord)
+import LesDefinitions exposing (definitionDecoder, meaningDecoder)
+import PasAffichage exposing (hiddenStyle)
+import Debug exposing (log)
 import String
-import List exposing (map)
-import Http  
+import Http 
 
-
+-- Le MAIN 
+main : Program () Model Msg
 main =
-    Browser.sandbox 
-    { init = init
-    , update = update
-    , view = view }
+    Browser.element { init = init, update = update, view = view, subscriptions = \_ -> Sub.none }
+
+-- DECLARATION DES TYPES 
+type alias Meaning =
+    { partOfSpeech : String
+    , definitions : List String
+    }
 
 type alias Model =
     { motChoisi : String
+    , meanings : List Meaning
+    , listMots : List String
+    , randomSeed : Int
     , inputUser : String
     , motTrouve : Bool 
-    , message : String
-    , title : String
+    , title : String 
     , showAnswer : Bool 
-    , randomSeed : Int
     , jeuInitialise : Bool
     }
 
-init : Model
-init =
-    { motChoisi = getRandomWord "" 42
-    , inputUser = ""
-    , motTrouve = False
-    , message = ""
-    , title = "Guess it!"
-    , showAnswer = False
-    , randomSeed = 42
-    , jeuInitialise = False 
-    }
-
+-- MESSAGES
 type Msg
-    = ChangerMot
-    | ActualiserInput String
+    = DefinitionFetched (Result Http.Error (List Meaning))
+    | InitialiserJeu
+    | GotText (Result Http.Error String)
+    | ActualiserInput String 
     | MontrerReponse Bool 
-    | InitialiserJeu 
+    | ChangerMot 
 
-update : Msg -> Model -> Model
+-- INITIALISATION
+init : () -> (Model, Cmd Msg)
+init _ =
+    ( { motChoisi  = "", meanings = [], listMots =[], randomSeed = 30,
+        inputUser = "", motTrouve = False, title = "Guess it!", showAnswer = False, jeuInitialise = False
+    }
+    , requestDefinition ""
+    )
+
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
+
+        DefinitionFetched (Ok meanings) ->
+            ({ model | meanings = meanings }, Cmd.none)
+
+        DefinitionFetched (Err _) ->
+            ({ model | meanings = [] }, Cmd.none)
+
+        InitialiserJeu ->
+            ({ model | jeuInitialise = True }, Http.get { url = "/static/monFichier.txt", expect = Http.expectString GotText })
+        
+        GotText result ->
+            case result of
+                Ok fullText ->
+                    let
+                        laListe = extractListOfWords fullText
+                        newSeed = model.randomSeed + 1
+                        newMot = getRandomWord laListe newSeed
+                    in
+                    ({ model | motChoisi = newMot, listMots = laListe}, requestDefinition newMot)
+                Err _ ->
+                    (model, Cmd.none)
+
         ChangerMot ->
             let
                 newSeed = model.randomSeed + 1  
-                nouveauMot = getRandomWord model.motChoisi newSeed
+                nouveauMot = getRandomWord model.listMots newSeed
             in
-            { model 
-            | motChoisi = nouveauMot
-            , randomSeed = newSeed
-            , inputUser = ""
-            , message = ""
-            , title = "Guess it!"
-            , motTrouve = False
-            , showAnswer = False}
+            ({ model | motChoisi = nouveauMot, randomSeed = newSeed, inputUser = ""
+            , title = "Guess it!", motTrouve = False, showAnswer = False}, requestDefinition nouveauMot)
 
         ActualiserInput input ->
             let 
                 isCorrect = input == model.motChoisi
-                result = 
-                    if isCorrect then 
-                        "Bravo !"
-                    else 
-                        "Essaie de deviner"
                 newTitle = if isCorrect then model.motChoisi else model.title
             in 
-            {model | inputUser = input, message = result, motTrouve = input == model.motChoisi, title = newTitle}
-
-        MontrerReponse isChecked -> 
-            if isChecked then 
-                { model | showAnswer = True, title = model.motChoisi}
-            else
-                { model | showAnswer = False, title = "Guess it!" }
+            ({model | inputUser = input, motTrouve = input == model.motChoisi, title = newTitle}, Cmd.none)
         
-        InitialiserJeu ->
-            { model | jeuInitialise= True }
+        MontrerReponse isChecked -> 
+            if isChecked then ({ model | showAnswer = True, title = model.motChoisi}, Cmd.none)
+            else ({ model | showAnswer = False, title = "Guess it!" }, Cmd.none)
+        
 
--- Ajoutez une fonction de style pour gérer la visibilité
-hiddenStyle : Bool -> List (Html.Attribute a)
-hiddenStyle isVisible =
-    if isVisible then
-        []
-    else
-        [ style "display" "none" ]
+extractListOfWords : String -> List String
+extractListOfWords text =
+    text
+        |> String.words
+        |> List.filter (\word -> not (String.isEmpty word))
 
--- ...
+requestDefinition : String -> Cmd Msg
+requestDefinition word =
+    Http.get
+        { url = "https://api.dictionaryapi.dev/api/v2/entries/en/" ++ word
+        , expect = Http.expectJson DefinitionFetched definitionDecoder
+        }
 
--- Modifiez la fonction view pour utiliser la fonction de style
+---- AFICHAGE
 view : Model -> Html Msg
 view model =
     div []
-        [ button [ onClick InitialiserJeu ] [ text "Initialiser le jeu" ]
+        [ div [style "height" "16px", style "width" "100%", style "margin" "0"] []
+        , div ([style "font-size" "45px"] ++ hiddenStyle (not model.jeuInitialise) )  [ text "R I D D L E" ]
+        , div ([style "font-size" "20px"] ++ hiddenStyle (not model.jeuInitialise) )  [ text "We are going to give you the different definitions of a word and you can try to guess it!" ]
+        , div [style "height" "16px", style "width" "100%", style "margin" "0"] [] 
+        , button [ onClick InitialiserJeu, style "display" <| if model.jeuInitialise then "none" else "block"] [ text "Start the game " ]
         , div ([ style "font-size" "24px", style "font-weight" "bold" ] ++ hiddenStyle model.jeuInitialise) [ text model.title ]
-        , button ([ onClick ChangerMot, onInput ActualiserInput ] ++ hiddenStyle model.jeuInitialise) [ text "Choisir un autre mot"]
-        , input ([ type_ "text", placeholder "Entre ton mot", Html.Attributes.value model.inputUser, onInput ActualiserInput] ++ hiddenStyle model.jeuInitialise) []
-        , div (hiddenStyle model.jeuInitialise) [ text model.message ]
-        , div ([ style "color" <| if model.motTrouve then "green" else "black" ] ++ hiddenStyle model.jeuInitialise) [ text <| if model.motTrouve then "Tu as gagné!" else "" ]
-        , input ([ type_ "checkbox", Html.Events.on "change" (Json.Decode.map MontrerReponse Html.Events.targetChecked), checked model.showAnswer ] ++ hiddenStyle model.jeuInitialise) []
-        , label (hiddenStyle model.jeuInitialise) [ text "Show the answer" ]      
+        , div [style "height" "16px", style "width" "100%", style "margin" "0"] []
+        , button ([ onClick ChangerMot, onInput ActualiserInput ] ++ hiddenStyle model.jeuInitialise) [ text "Choose another word"]
+        , div [style "height" "16px", style "width" "100%", style "margin" "0"] []
+        , div ([style "font-size" "15px"] ++ hiddenStyle model.jeuInitialise ) (List.concatMap viewMeaning model.meanings)
+        , input ([ type_ "text", placeholder "Write your answer here", Html.Attributes.value model.inputUser, onInput ActualiserInput] ++ hiddenStyle model.jeuInitialise ) []
+        , div ([ style "color" <| if model.motTrouve then "green" else "black" ] ++ hiddenStyle model.jeuInitialise ) [ text <| if model.motTrouve then "Yeah ! you found the answer :)))" else "" ]
+        , div [style "height" "16px", style "width" "100%", style "margin" "0"] []
+        , input ([ type_ "checkbox", Html.Events.on "change" (Json.Decode.map MontrerReponse Html.Events.targetChecked), checked model.showAnswer ] ++ hiddenStyle model.jeuInitialise ) []
+        , label (hiddenStyle model.jeuInitialise) [ text "     Show the answer" ] 
         ]
+
+viewMeaning : Meaning -> List (Html Msg)
+viewMeaning meaning =
+    [ div [] [ text ("Part of Speech: " ++ meaning.partOfSpeech) ]
+    , ul [] (List.indexedMap viewDefinition meaning.definitions)
+    ]
+
+viewDefinition : Int -> String -> Html Msg
+viewDefinition index definition =
+    li [] [ text (definition) ]
