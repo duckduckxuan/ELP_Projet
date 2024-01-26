@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grille de Lettres</title>
+  <style>
+    /* Ajoutez du style CSS pour la mise en page si nécessaire */
+    .grille-container {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .grille-table {
+      border-collapse: collapse;
+      margin: 20px;
+    }
+
+    .grille-table, th, td {
+      border: 1px solid black;
+    }
+
+    th, td {
+      width: 30px; /* ou toute autre valeur que vous préférez */
+      height: 30px; /* ou toute autre valeur que vous préférez */
+      padding: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>GAME</h1>
+  <div class="grille-container">
+    <table id="grille-container-joueur-a" class="grille-table"></table>
+    <table id="grille-container-joueur-b" class="grille-table"></table>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
