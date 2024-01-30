@@ -16,6 +16,7 @@ function generateChessboard(rows, cols) {
     return chessboard;
 }
 
+
 // Generate Letter Library
 const letterLibrary = {
     A: 14,
@@ -46,6 +47,14 @@ const letterLibrary = {
     Z: 2
 };
 
+
+// Read user's input
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+
 // Initialise game
 function assignRandomLetters() {
     const playerLetters = [];
@@ -73,51 +82,44 @@ function assignRandomLetters() {
 }
 
 
-let playerLetters = assignRandomLetters();
-
-
-// Read user's input
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
 // Let user to enter a word
 function promptUser() {
     rl.question(`Enter a word consisting of ${playerLetters.join(', ')} (length: 3-9 letters): `, (word) => {
-        word = word.toUpperCase();
-        isValidWord(word).then(isValid => {
-            if (isValid) {
-                console.log(`"${word}" is a valid English word.`);
-                rl.close();
-            } else {
-                console.log('Invalid input, please re-enter.');
-                promptUser();
+        word = word.toLowerCase();  // Convert user input to lowercase
+        const availableLetters = new Set(playerLetters.map(letter => letter.toLowerCase()));  // Convert user's letters to lowercase
+
+        try {
+            if (word.length < 3 || word.length > 9) {
+                throw new Error('Invalid word length');
             }
-        });
+
+            if (!word.split('').every(letter => availableLetters.has(letter))) {
+                throw new Error('Invalid letter in the word');
+            }
+
+            axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`)
+                .then(response => {
+                    if (response.data) {
+                        console.log(`"${word}" is a valid English word.`);
+                        rl.close();
+                    } else {
+                        console.log('Invalid input, please re-enter.');
+                        promptUser();
+                    }
+                })
+                .catch(error => {
+                    console.log('Invalid input, please re-enter.');
+                    promptUser();
+                });
+        } catch (error) {
+            console.log('Invalid input, please re-enter.');
+            promptUser();
+        }
     });
 }
 
-// Check word validity
-function isValidWord(word) {
-    word = word.toUpperCase();
-    const availableLetters = new Set(playerLetters.map(letter => letter.toUpperCase()));
 
-    if (word.length < 3 || word.length > 9) {
-        return false;
-    }
-
-    return axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`)
-    .then(response => {
-        return response.data && response.data.word === word;
-    })
-    .catch(error => {
-        console.error('Error checking word with API:', error);
-        return false;
-    });
-}
-
+let playerLetters = assignRandomLetters();
 console.log(generateChessboard(8,9));
 console.log("Player's letters:", playerLetters);
 promptUser();
-
