@@ -43,11 +43,34 @@ const letterLibrary = {
     Z: 2
 };
 
-// example: print letter library
-for (const letter in letterLibrary) {
-    console.log(`${letter}: ${letterLibrary[letter]}`);
+// Initialise game
+function assignRandomLetters() {
+    const playerLetters = [];
+    
+    // Distuibute 6 letters to player
+    for (let i = 0; i < 6; i++) {
+        const allLetters = Object.keys(letterLibrary);
+        if (allLetters.length === 0) {
+            console.log("Letter Library is empty!");
+            break;
+        }
+
+        const randomIndex = Math.floor(Math.random() * allLetters.length);
+        const randomLetter = allLetters[randomIndex];
+        playerLetters.push(randomLetter);
+
+        // Update Lettre Library
+        letterLibrary[randomLetter]--;
+        if (letterLibrary[randomLetter] === 0) {
+            delete letterLibrary[randomLetter];
+        }
+    }
+    
+    return playerLetters;
 }
 
 
-// Print chessboard on console
+const playerLetters = assignRandomLetters();
+console.log("Player's letters:", playerLetters);
+console.log("Updated Letter Library:", letterLibrary);
 console.log(generateChessboard(8,9));
