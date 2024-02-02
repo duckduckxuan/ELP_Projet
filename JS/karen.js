@@ -81,16 +81,71 @@ function giveRandomLetterToPlayer(player) {
     console.log(`${player} received letter: ${randomLetter}`);
 }
 
+function giveRandomLettersToPlayer(player, lettersToExchange, count = 3) {
+    const allLetters = Object.keys(letterLibrary);
+
+    // Vérifier si la bibliothèque de lettres est vide
+    if (allLetters.length === 0) {
+        console.log("Letter Library is empty!");
+        return;
+    }
+
+    // Sélectionner count nouveaux lettres
+    const newLetters = [];
+    for (let i = 0; i < count; i++) {
+        if (allLetters.length === 0) {
+            console.log("Letter Library is empty!");
+            break;
+        }
+
+        const randomIndex = Math.floor(Math.random() * allLetters.length);
+        const randomLetter = allLetters[randomIndex];
+        newLetters.push(randomLetter);
+
+        // Mettre à jour la bibliothèque de lettres
+        if (letterLibrary[randomLetter] > 1) {
+            letterLibrary[randomLetter]--;
+        } else {
+            delete letterLibrary[randomLetter];
+        }
+
+        // Retirer la lettre utilisée de la liste
+        allLetters.splice(randomIndex, 1);
+    }
+
+    // Ajouter les nouveaux lettres à la liste du joueur spécifié
+    playerLetters[player] = [...playerLetters[player], ...newLetters];
+
+    // Enlever les lettres à échanger de la main du joueur
+    if (Array.isArray(lettersToExchange) && lettersToExchange.length > 0) {
+        console.log('Letters to exchange:', lettersToExchange);
+        for (const letter of lettersToExchange) {
+            const index = playerLetters[player].indexOf(letter);
+            if (index !== -1) {
+                playerLetters[player].splice(index, 1);
+            }
+        }
+    } else {
+        console.log('Letters to exchange:', lettersToExchange);
+        console.log('Invalid input for lettersToExchange.');
+    }
+    console.log(`${player} received letters: ${newLetters.join(', ')}`);
+}
+
+
+
 
 function updateLetterLibrary(letters) {
     letters.forEach(letter => {
         if (letterLibrary[letter] !== undefined && letterLibrary[letter] > 0) {
             letterLibrary[letter]--;
         } else {
-            console.log(`Cannot update letter library. Letter ${letter} not available.`);
+            console.log(`Letter ${letter} not available. Creating a new entry.`);
+            letterLibrary[letter] = 1
         }
     });
 }
+
 
 function updateChessboard(chessboard, word, currentPlayer) {
     const emptyRowIndex = findEmptyRowIndex(chessboard);
@@ -224,43 +279,42 @@ async function playTurn() {
     }
 
     // Ask player to change letters or not
-    const exchangeChoice = await new Promise((resolve) => {
-        rl.question(`Do you want to exchange letters? (yes/no): `, (input) => {
-            resolve(input.trim().toLowerCase());
+    
+    if (playerRounds[currentPlayer] > 1 && !hasExchangedLetters[currentPlayer]) {
+        // Ask player to exchange 3 letters or draw 1 letter
+        const exchangeType = await new Promise((resolve) => {
+            rl.question(`Do you want to exchange three letters or draw one letter? (three/draw): `, (input) => {
+                resolve(input.trim().toLowerCase());
+            });
         });
-    });
 
-    if (exchangeChoice === 'yes') {
-        if (playerRounds[currentPlayer] > 1 && !hasExchangedLetters[currentPlayer]) {
-
-            // Ask player to exchange 3 letters or draw 1 letter
-            const exchangeType = await new Promise((resolve) => {
-                rl.question(`Do you want to exchange three letters or draw one letter? (three/draw): `, (input) => {
-                    resolve(input.trim().toLowerCase());
+        if (exchangeType === 'three') {
+            // Ask which 3 letters to exchange
+            const lettersToExchange = await new Promise((resolve) => {
+                rl.question(`Enter the three letters you want to exchange (e.g., ABC): `, (input) => {
+                    const trimmedInput = input.trim().toUpperCase();
+                    
+                    // Verify the enter is valid or not
+                    if (/^[A-Z]{3}$/.test(trimmedInput)) {
+                        resolve(trimmedInput.split(''));
+                    } else {
+                        console.log('Invalid input. Please enter exactly three uppercase letters (e.g., ABC).');
+                        resolve([]);
+                    }
                 });
             });
-
-            if (exchangeType === 'three') {
-                // Ask which 3 letters to exchange
-                const lettersToExchange = await new Promise((resolve) => {
-                    rl.question(`Enter the three letters you want to exchange (e.g., ABC): `, (input) => {
-                        resolve(input.trim().toUpperCase().split(''));
-                    });
-                });
-
-                // Put letters back to library and give 3 new letters
-                updateLetterLibrary(lettersToExchange);
-                playerLetters[currentPlayer] = assignRandomLetters(currentPlayer);
-                console.log(`${currentPlayer}'s letters: ${playerLetters[currentPlayer].join(', ')}`);
-            } else if (exchangeType === 'draw') {
-                // Give 1 letter to player
-                giveRandomLetterToPlayer(currentPlayer);
-            }
-
-            hasExchangedLetters[currentPlayer] = true;
+            // Put letters back to library and give 3 new letters
+            giveRandomLettersToPlayer(currentPlayer,lettersToExchange);
+            updateLetterLibrary(lettersToExchange);
+            console.log(`${currentPlayer}'s letters: ${playerLetters[currentPlayer].join(', ')}`);
+        } else if (exchangeType === 'draw') {
+            // Give 1 letter to player
+            giveRandomLetterToPlayer(currentPlayer);
+            console.log(`${currentPlayer}'s letters: ${playerLetters[currentPlayer].join(', ')}`);
         }
     }
     playerRounds[currentPlayer]++;
+    hasExchangedLetters[currentPlayer] = true;
 
     while (true) {
         const word = await new Promise((resolve) => {
