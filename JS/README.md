@@ -1,3 +1,3 @@
 
 
-intaller axios 
+nmp install axios 
