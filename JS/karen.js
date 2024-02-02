@@ -1,7 +1,6 @@
 const readline = require('readline');
 const axios = require('axios');
 
-
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -14,6 +13,14 @@ let playerLetters = {
     'Player 2': []
 };
 let lettersPicked = {
+    'Player 1': false,
+    'Player 2': false
+};
+let playerRounds = {
+    'Player 1': 1,
+    'Player 2': 1
+};
+let hasExchangedLetters = {
     'Player 1': false,
     'Player 2': false
 };
@@ -216,34 +223,76 @@ async function playTurn() {
         return;
     }
 
-    const word = await new Promise((resolve) => {
-        rl.question(`Enter word or type 'pass' to switch player: `, (input) => {
-            resolve(input.trim().toUpperCase());
+    // Ask player to change letters or not
+    const exchangeChoice = await new Promise((resolve) => {
+        rl.question(`Do you want to exchange letters? (yes/no): `, (input) => {
+            resolve(input.trim().toLowerCase());
         });
     });
 
-    if (word === 'PASS') {
-        switchPlayer();
-        playTurn(); // Continuez le jeu même si le mot est 'PASS'
-    } else {
-        // Utiliser await pour attendre la résolution de la fonction isValidWord
-        if (await isValidWord(word, currentPlayer)) {
-            if (currentPlayer === 'Player 1') {
-                giveRandomLetterToPlayer('Player 1');
-                chessboardPlayer1 = updateChessboard(chessboardPlayer1, word, 'Player 1');
-            } else {
-                giveRandomLetterToPlayer('Player 2');
-                chessboardPlayer2 = updateChessboard(chessboardPlayer2, word, 'Player 2');
+    if (exchangeChoice === 'yes') {
+        if (playerRounds[currentPlayer] > 1 && !hasExchangedLetters[currentPlayer]) {
+
+            // Ask player to exchange 3 letters or draw 1 letter
+            const exchangeType = await new Promise((resolve) => {
+                rl.question(`Do you want to exchange three letters or draw one letter? (three/draw): `, (input) => {
+                    resolve(input.trim().toLowerCase());
+                });
+            });
+
+            if (exchangeType === 'three') {
+                // Ask which 3 letters to exchange
+                const lettersToExchange = await new Promise((resolve) => {
+                    rl.question(`Enter the three letters you want to exchange (e.g., ABC): `, (input) => {
+                        resolve(input.trim().toUpperCase().split(''));
+                    });
+                });
+
+                // Put letters back to library and give 3 new letters
+                updateLetterLibrary(lettersToExchange);
+                playerLetters[currentPlayer] = assignRandomLetters(currentPlayer);
+                console.log(`${currentPlayer}'s letters: ${playerLetters[currentPlayer].join(', ')}`);
+            } else if (exchangeType === 'draw') {
+                // Give 1 letter to player
+                giveRandomLetterToPlayer(currentPlayer);
             }
 
-            playTurn(); // Continuer le tour avec un mot valide
-        } else {
-            // Pause de 2 secondes avant de continuer
-            setTimeout(() => {
-                playTurn(); // Demander un nouveau mot car l'ancien était invalide
-            }, 2000);
+            hasExchangedLetters[currentPlayer] = true;
         }
     }
+    playerRounds[currentPlayer]++;
+
+    while (true) {
+        const word = await new Promise((resolve) => {
+            rl.question(`Enter word or type 'pass' to switch player: `, (input) => {
+                resolve(input.trim().toUpperCase());
+            });
+        });
+
+        if (word === 'PASS') {
+            switchPlayer();
+            hasExchangedLetters['Player 1'] = false;
+            hasExchangedLetters['Player 2'] = false;
+            break;
+        } else {
+            // Utiliser await pour attendre la résolution de la fonction isValidWord
+            if (await isValidWord(word, currentPlayer)) {
+                if (currentPlayer === 'Player 1') {
+                    giveRandomLetterToPlayer('Player 1');
+                    chessboardPlayer1 = updateChessboard(chessboardPlayer1, word, 'Player 1');
+                } else {
+                    giveRandomLetterToPlayer('Player 2');
+                    chessboardPlayer2 = updateChessboard(chessboardPlayer2, word, 'Player 2');
+                }
+                break;
+            } else {
+                // Pause de 2 secondes avant de continuer
+                console.log("Invalid word. Please try again.");
+            }
+        }
+    }
+
+    playTurn();
 }
 
 playTurn();
