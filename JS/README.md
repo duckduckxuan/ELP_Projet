@@ -1,7 +1,9 @@
 # JARNAC - Jeu de mots stratégique
 
-## Description
-JARNAC est un jeu de mots stratégique où les joueurs s'affrontent pour former des mots sur un plateau de jeu. Les règles du jeu comprennent la possibilité de piocher des lettres, de changer des lettres, et même de transformer des mots déjà joués.
+## Accomplissements
+Nous avons réussi à implémenter le jeu de JARNAC, avec : 
+
+
 
 ## Installation
 1. Assurez-vous d'avoir [Node.js](https://nodejs.org/) installé sur votre ordinateur.
