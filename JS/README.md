@@ -5,10 +5,10 @@ JARNAC est un jeu de mots stratégique où les joueurs s'affrontent pour former 
 
 ## Installation
 1. Assurez-vous d'avoir [Node.js](https://nodejs.org/) installé sur votre ordinateur.
-2. Clonez ce dépôt : `git clone https://votre-repo-jarnac.git`
-3. Accédez au répertoire du projet : `cd nom-du-repertoire`
-4. Installez les dépendances : `npm install`
-
+2. Clonez ce dépôt git
+3. Accédez au répertoire du projet : `cd JS`
+**4. Installez :** `npm install axios readline`
+   
 ## Comment jouer
 1. Lancez le jeu en exécutant `node jarnac.js` dans le terminal.
 2. Suivez les instructions pour jouer des tours, former des mots et interagir avec le jeu.
