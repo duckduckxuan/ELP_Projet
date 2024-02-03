@@ -3,6 +3,11 @@
 ## Accomplissements
 Nous avons réussi à implémenter le jeu de JARNAC, avec : 
 
+- **Joueurs :** On a deux joueurs et le jouer qui commence la parti est choisi aleatoirement. 
+- **Début du jeu :** Au début du jeu les joueurs recoivent 6 lettres de manière aléatoire.
+- 
+- **Validation des mots :** Nous avons utilisé une API pour la validation des mots en anglais : (https://api.dictionaryapi.dev/api/v2/entries/en/<word>)
+- **JARNAC :** Il est possible de faire un JARNAC dans ce jeu ! 
 
 
 ## Installation
