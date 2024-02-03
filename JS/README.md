@@ -4,7 +4,7 @@
 Nous avons réussi à implémenter le jeu de JARNAC, avec : 
 
 - **Joueurs :** Nous avons deux joueurs" et le joueur qui commence la partie est choisi aleatoirement. 
-- **Début du jeu :**Au début du jeu, les joueurs reçoivent 6 lettres de manière aléatoire.
+- **Début du jeu :** Au début du jeu, les joueurs reçoivent 6 lettres de manière aléatoire.
 - **Validation des mots :** Nous avons utilisé une API pour la validation des mots en anglais : (https://api.dictionaryapi.dev/api/v2/entries/en/<word>)
 - **Enregistrer le jeu :** À la fin du jeu, les coups joués par chaque joueur seront enregistrés dans un fichier .txt
 
